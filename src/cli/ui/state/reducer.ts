@@ -3,6 +3,7 @@ import type {
   Card,
   CardId,
   LiveCard,
+  PlanStep,
   ReasoningCard,
   StreamingCard,
   ToolCard,
@@ -252,7 +253,7 @@ export function reduce(state: AgentState, event: AgentEvent): AgentState {
         id: event.id,
         ts: Date.now(),
         title: event.title,
-        steps: event.steps,
+        steps: event.variant === "active" ? advanceActivePlanSteps(event.steps) : event.steps,
         variant: event.variant,
       });
 
@@ -285,7 +286,7 @@ export function reduce(state: AgentState, event: AgentEvent): AgentState {
         });
         if (!stepChanged) return c;
         changed = true;
-        return { ...c, steps: next };
+        return { ...c, steps: c.variant === "active" ? advanceActivePlanSteps(next) : next };
       });
       return changed ? { ...state, cards } : state;
     }
@@ -446,6 +447,19 @@ function nextId(prefix: string): string {
 
 function makeUserCard(text: string): UserCard {
   return { kind: "user", id: nextId("user"), ts: Date.now(), text };
+}
+
+function isSettledPlanStatus(status: PlanStep["status"]): boolean {
+  return status === "done" || status === "failed" || status === "blocked" || status === "skipped";
+}
+
+function advanceActivePlanSteps(steps: ReadonlyArray<PlanStep>): PlanStep[] {
+  const runningIndex = steps.findIndex((s) => !isSettledPlanStatus(s.status));
+  return steps.map((s, i) => {
+    if (isSettledPlanStatus(s.status)) return s;
+    const status: PlanStep["status"] = i === runningIndex ? "running" : "queued";
+    return s.status === status ? s : { ...s, status };
+  });
 }
 
 function makeReasoningCard(id: string, model?: string): ReasoningCard {
