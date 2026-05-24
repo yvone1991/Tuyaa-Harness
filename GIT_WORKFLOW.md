@@ -2,7 +2,7 @@
 
 This repository uses two remotes:
 
-- `origin`: my own repository, `git@github.com:yvone1991/Tuyaa-Hub.git`
+- `origin`: my own repository, `git@github.com:yvone1991/Tuyaa-Harness.git`
 - `upstream`: the official repository, `https://github.com/esengine/DeepSeek-Reasonix.git`
 
 Use `codex/custom-dev` for daily development.
